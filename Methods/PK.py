@@ -24,8 +24,8 @@ def Antibody(t, params_dic, is_log = False, save_to = "test", ka_solver = "lm"):
                 params_dic["t_half"] = t_{1/2}, ndarray (N, ) 
     is_log : bool, optional
              True if return the log of concentration. The default is False.
-    save_to : string Path/filename (saved to csv)
-    ka_solver : root solver method for finding absorbtion rate ka (see scipy.optimize.root)
+    save_to : string Path/filename (saved to csv), optional. The default is test
+    ka_solver : root solver method for finding absorption rate k_a (see scipy.optimize.root), optional. The default is lm
 
     Returns
     -------
