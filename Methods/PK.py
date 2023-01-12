@@ -40,7 +40,7 @@ def Antibody(t, params_dic, is_log = False, save_to = "test", ka_solver = "lm"):
     
     # Antibody absorption rate
     guess = np.ones(len(t_max))
-    ka = root(ka_solve, guess, args = (ke, t_max), method = 'lm').x
+    ka = root(ka_solve, guess, args = (ke, t_max), method = ka_solver).x
     print("\n k_a was found correctly:", np.all(np.isclose(ka_solve(ka, ke, t_max), np.zeros(len(t_max)))), "\n")
 
     # Compute Normalized Concentration
