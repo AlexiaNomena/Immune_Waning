@@ -49,6 +49,7 @@ def Antibody(t, params_dic, is_log = False, save_to = "test", ka_solver = "lm"):
     
     if is_log:
         c_t = np.log(c_t)
+
     # Build pandas dataframe‚
     df = {}
     df["Days"] = t

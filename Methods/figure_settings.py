@@ -19,7 +19,7 @@ def PreFig(xsize = 12, ysize = 12):
 
 
 
-def Display(t, c_t, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 20, save_to = "test"):
+def Display(t, c_t, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 20, save_to = "test", xval = "x", yval = "f(x)"):
     PreFig(xsize = xysize[0], ysize = xysize[1])
     fig = plt.figure(figsize = figsize)
     ax = fig.add_subplot(1, 1, 1)
@@ -28,11 +28,11 @@ def Display(t, c_t, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize 
         plt.plot(t, c_t[i, :], label = labels[i])
         
     if is_log:
-        plt.ylabel("$\ln(c_t)$", fontsize = labsize)
+        plt.ylabel("$\ln$ %s"%yval, fontsize = labsize)
     else:
-        plt.ylabel("$c_t$", fontsize = labsize)  
+        plt.ylabel("%s"%yval, fontsize = labsize)  
     
-    plt.xlabel("time (days)", fontsize = labsize)
+    plt.xlabel(xval, fontsize = labsize)
     plt.legend(fontsize = labsize)
     
     if save_to[:-3] == "pdf":
