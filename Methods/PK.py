@@ -46,7 +46,9 @@ def Antibody(t, params_dic, is_log = False, save_to = "test", ka_solver = "lm"):
     # Compute Normalized Concentration
     c_max = (np.exp(- ke*t_max) - np.exp(- ka*t_max))
     c_t = (np.exp(- ke[:, np.newaxis]*t) - np.exp(- ka[:, np.newaxis]*t))/c_max[:, np.newaxis]
-       
+    
+    if is_log:
+        c_t = np.log(c_t)
     # Build pandas dataframe‚
     df = {}
     df["Days"] = t
