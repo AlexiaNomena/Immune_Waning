@@ -61,7 +61,7 @@ def Antibody(t, params_dic, is_log = False, save_to = "test", ka_solver = "lm"):
     # save data
     df.to_csv(save_to)
          
-    return c_t, df
+    return c_t, df, ka, ke
 
 def ka_solve(ka, ke, t_max):
     if np.all(ka)>0:
