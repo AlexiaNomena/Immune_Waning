@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 import pdb
 
-def Antibody(t, params_dic, is_log = False, save_to = "test", ka_solver = "lm"):
+def Antibody(t, params_dic, is_log = False, save = True, save_to = "test", ka_solver = "lm"):
     """
     @brief: Compute Antibody Concentration as a function of time for N antibody classes
     
@@ -59,7 +59,8 @@ def Antibody(t, params_dic, is_log = False, save_to = "test", ka_solver = "lm"):
     df = pd.DataFrame(df)
     
     # save data
-    df.to_csv(save_to)
+    if save:
+        df.to_csv(save_to)
          
     return c_t, df, ka, ke
 
