@@ -36,16 +36,16 @@ def Prob_Neut_Per_Variant(t, infected, antibody_data, VE_data_wild, variant_data
     for j in range(variant_prop.shape[1]):
         IC50_var = ic50_wild*fold_res[j]
         expect_ve = np.zeros((len(t), len(list(c_dframe.index))))
+        
         for i in range(len(t)):
             for k in range(len(list(c_dframe.index))):
                 if k>=i:
                     if k-day_activation >= 0 and k-day_activation < len(list(c_dframe.index)):
                         antibody_level = c_dframe.loc[k-day_activation][1:]
-                        #expect_ve[i, k] = (infected[i]*variant_prop[i, j])*vaccine_efficacy_n_antibodies(antibody_level, IC50_var)
                         expect_ve[i, k] = (infected[i]*variant_prop[i, j])*vaccine_efficacy_n_antibodies(antibody_level, IC50_var)
             
         #pdb.set_trace()    
-        res_dic[variant_name[j]] = np.sum(expect_ve, axis = 0)/np.cumsum(infected*variant_prop[:, j])
+        res_dic[variant_name[j]] = np.sum(expect_ve, axis = 0)/np.cumsum(infected)
     
     return res_dic
         
