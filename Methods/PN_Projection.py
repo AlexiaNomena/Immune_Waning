@@ -36,7 +36,7 @@ def Neut_Total(t, infected, antibody_data, VE_data_wild, variant_data):
         IC50_var = ic50_wild*fold_res[j]
         expect_ve = np.zeros(len(t))
         for i in range(len(t)):
-            antibody_level = c_dframe.loc[max(t) - 1 - i][1:]
+            antibody_level = c_dframe.loc[i][1:]
             expect_ve[i] = (infected[i]*variant_prop[i, j])*vaccine_efficacy_n_antibodies(antibody_level, IC50_var)
         res_dic[variant_name[j]] = expect_ve
     
