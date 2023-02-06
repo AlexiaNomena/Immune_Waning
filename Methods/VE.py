@@ -37,10 +37,10 @@ def vaccine_efficacy_n_antibodies(x, ic50):
     return(1 - res)
 
 
-def expected_reduction_infection_prob(ic50, days, inf_data, n, c_dframe):
+def expected_reduction_infection_prob(ic50, days, inf_data, total_population, n, c_dframe):
     reduction = 0
     for day in days:
         days_since_infection = max(days) + 1 - day
         antibody_level = c_dframe.loc[days_since_infection - 1][1:n+1]
-        reduction += vaccine_efficacy_n_antibodies(antibody_level, ic50) * inf_data[day]
-    return(reduction/sum(inf_data))
+        reduction += vaccine_efficacy_n_antibodies(antibody_level, ic50) * inf_data[day]/total_population[day]
+    return(reduction)
