@@ -62,7 +62,7 @@ for j in range(len(relevant_AB)):
     IC50xx_relevant[relevant_AB[j]] = [np.mean(np.array(IC50_j))]
 
 ic50_df = pd.DataFrame(IC50xx_relevant)
-ic50_df.to_csv("Data/IC50xx_per_AB_class.csv")
+ic50_df.to_csv("Data/IC50xx_per_Ab_class.csv")
 
 """
 # Compute an IC50xx per relevant sites and antibody class

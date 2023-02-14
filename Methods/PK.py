@@ -12,7 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 import pdb
 
-def Antibody(t, params_dic, is_log = False, save = True, save_to = "test", ka_solver = "lm"):
+def Antibody(t, params_dic, is_log = False, save = True, Ab_names = None, save_to = "test", ka_solver = "lm"):
     """
     @brief: Compute Antibody Concentration as a function of time for N antibody classes
     
@@ -52,9 +52,16 @@ def Antibody(t, params_dic, is_log = False, save = True, save_to = "test", ka_so
 
     # Build pandas dataframe‚
     df = {}
+    c_max_dic = {}
     df["Days"] = t
     for i in range(len(t_max)):
-        df["Ab_%d"%(i+1)] = c_t[i, :]
+        if Ab_names is None:
+            df["Ab class %d"%(i+1)] = c_t[i, :]
+            c_max_dic["Ab class %d"%(i+1)] = c_max[i]
+        else:
+            df[Ab_names[i]] = c_t[i, :]
+            c_max_dic[Ab_names[i]] = c_max[i]
+        
         
     df = pd.DataFrame(df)
     
@@ -62,7 +69,7 @@ def Antibody(t, params_dic, is_log = False, save = True, save_to = "test", ka_so
     if save:
         df.to_csv(save_to)
          
-    return c_t, df, ka, ke
+    return c_t, df, ka, ke, c_max_dic
 
 def ka_solve(ka, ke, t_max):
     if np.all(ka)>0:

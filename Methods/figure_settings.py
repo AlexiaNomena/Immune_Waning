@@ -19,7 +19,6 @@ def PreFig(xsize = 12, ysize = 12):
     matplotlib.rc('ytick', labelsize=ysize)
 
 
-
 def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 20, save_to = "test", xval = "x", yval = "f(x)"):
     PreFig(xsize = xysize[0], ysize = xysize[1])
     fig = plt.figure(figsize = figsize)
@@ -44,3 +43,31 @@ def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 
         plt.savefig(save_to)
     
     return fig, ax
+
+import seaborn as sns
+
+
+def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 ,colormap = None, save_to = "cross_reactivity"):
+    dLabs = list(data_dic.keys())
+    N = len(dLabs)
+    if N%2 == 0:
+        F = int(N/2) 
+    else:
+        F = (N//2) + 1
+    PreFig()
+    fig = plt.figure(figsize = (F*6, F*6))
+    num = 1
+    for i in range(N):
+        ax = fig.add_subplot(F, F, num) 
+        cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
+                       cbar = False, annot = True, fmt = ".2f", annot_kws = {"size":annotsize})
+        num +=1
+        plt.title(dLabs[i], fontsize = 16)
+    
+    #plt.subplots_adjust(top=0.965, bottom=0.095, left=0.080, right = 0.75, hspace=0.175, wspace=0.175)
+    plt.subplots_adjust(hspace=0.3, wspace=0.3)    
+    pdf = PdfPages(save_to + ".pdf")
+    pdf.savefig(fig, bbox_inches = "tight")
+    pdf.close()
+    return fig
+    

@@ -12,13 +12,58 @@ from scipy.optimize import root
 import numpy as np
 import pdb
 
+""" Compute cross reactivity map """
+mut_sites_library = {"Wuhan-Hu-1":[],
+                        "Alpha": [501],
+                         "Beta": [417, 484, 501],
+                         "Gamma": [417, 484, 501],
+                         "Delta": [452, 478],
+                         "Lambda": [452, 490],
+                         "Mu": [346, 484, 501],
+                         "Omicron":[339, 371, 373, 375, 417, 440, 446, 477, 478, 484, 493, 496, 498, 501, 505],
+                         "PMS20":[346, 417, 440, 445, 455, 475, 484, 501]}
+
+
+def fub_xy(variant_i, variant_j, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library):
+    sites_i = mut_sites_per_variant[variant_i]
+    sites_j = mut_sites_per_variant[variant_j]
+    
+    escape_data = np.array(escape_per_sites["mean_escape_fraction_per_site"], dtype = float)
+    all_bound = 1
+    for s in sites_j:
+        if s not in sites_i:
+            where_s = escape_per_sites["site"] == s
+            where_ab = escape_per_sites["ab_class"] == ab
+            if (len(where_s) != 0):
+                all_bound *= (1 - escape_data[where_ab*where_s])
+            else: # if there is no data for some mutation sites
+                pdb.set_trace()
+    
+    return 1 - all_bound # ab needs to bind just one of the sites
+
+def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library):
+    FRxy = {}
+    for ab in Ab_classes:
+        FRxy_ab = np.ones((len(variant_name), len(variant_name)))
+        for i in range(len(variant_name)):
+            for j in range(len(variant_name)):
+                if (i !=j) & (j>i):
+                    tot_fubxy = fub_xy(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant)
+                    if tot_fubxy != 0:
+                        FRxy_ab[i, j] = 100/((1/tot_fubxy) - 1)
+                    FRxy_ab[j, i] = FRxy_ab[i, j]
+        FRxy[ab] = FRxy_ab
+    return FRxy
+
+
+
 """ Projection of Infection probability as a funciton of COV19 Variant proportion """ 
 
 def Antibody_infos(t, antibody_data, VE_data):
     t_max = antibody_data["t_max"]
     t_half = antibody_data["t_half"]
     params_dic = {"t_max":t_max, "t_half":t_half}
-    c_t, c_dframe, ka, ke = Antibody(t = t, params_dic = params_dic, is_log = False, save = False)
+    c_t, c_dframe, ka, ke, cmax = Antibody(t = t, params_dic = params_dic, is_log = False, save = False)
     IC50 = root(sqrt_diff, 0.2, args = (VE_data["days"], VE_data["Efficacy"], len(t_max), c_dframe), method = "lm").x
     return IC50, c_dframe
     
