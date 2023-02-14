@@ -19,12 +19,12 @@ def PreFig(xsize = 12, ysize = 12):
     matplotlib.rc('ytick', labelsize=ysize)
 
 
-def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 20, save_to = "test", xval = "x", yval = "f(x)"):
+def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 20, save_to = "test", xval = "x", yval = "f(x)", linewidth = 3):
     PreFig(xsize = xysize[0], ysize = xysize[1])
     fig = plt.figure(figsize = figsize)
     ax = fig.add_subplot(1, 1, 1)
     for i in range(Y.shape[0]):
-        plt.plot(t, Y[i, :], label = labels[i])
+        plt.plot(t, Y[i, :], label = labels[i], linewidth = linewidth)
         
     if is_log:
         plt.ylabel("$\ln$ %s"%yval, fontsize = labsize)

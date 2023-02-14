@@ -36,6 +36,13 @@ def vaccine_efficacy_n_antibodies(x, ic50):
         res *= (1 - ve)
     return(1 - res)
 
+def efficacy_n_antibodies(x, ic50):
+    res = 1
+    for i in range(len(x)):
+        ve = vaccine_efficacy(x[i], ic50[i])
+        res *= (1 - ve)
+    return(1 - res)
+
 
 def expected_reduction_infection_prob(ic50, days, inf_data, total_population, n, c_dframe):
     reduction = 0

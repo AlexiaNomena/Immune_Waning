@@ -6,7 +6,7 @@ Created on Tue Jan 24 10:38:34 2023
 @author: raharinirina
 """
 from .PK import Antibody
-from .VE import sqrt_diff, vaccine_efficacy_n_antibodies
+from .VE import sqrt_diff, vaccine_efficacy_n_antibodies, efficacy_n_antibodies
 from scipy.optimize import root
 
 import numpy as np
@@ -55,10 +55,26 @@ def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_v
         FRxy[ab] = FRxy_ab
     return FRxy
 
+def Immunity_per_variant(t, PK_dframe, infection_data, variant_x, variant_y_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
+    res = np.zeros((len(t), len(infection_data)))
+    x = list(variant_name).index(variant_x)
+    for l in range(len(infection_data)):
+        infected_l = infection_data[l]*variant_proportion[l]
+        
+        for j in range(len(variant_y_list)):
+            y = list(variant_name).index(variant_y_list[j])
+            for k in range(len(t)):
+                if l <= k:
+                    antibody_level = PK_dframe.loc[k - l][1:]
+                    
+                    IC50 = [Cross_react_dic[ab][x, y]*IC50xx[ab] for ab in Ab_classes]
+                    Ab_Eff = efficacy_n_antibodies(antibody_level, IC50)
+                    res[k, l] += infected_l*Ab_Eff
+    immunity_to_variant = np.sum(res, axis = 0)
+    return immunity_to_variant 
 
 
 """ Projection of Infection probability as a funciton of COV19 Variant proportion """ 
-
 def Antibody_infos(t, antibody_data, VE_data):
     t_max = antibody_data["t_max"]
     t_half = antibody_data["t_half"]
