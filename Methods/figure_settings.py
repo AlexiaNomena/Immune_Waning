@@ -47,7 +47,7 @@ def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 
 import seaborn as sns
 
 
-def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 ,colormap = None, save_to = "cross_reactivity"):
+def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 ,colormap = None, save_to = "cross_reactivity", sub_fig_size = 6):
     dLabs = list(data_dic.keys())
     N = len(dLabs)
     if N%2 == 0:
@@ -55,7 +55,7 @@ def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 ,colormap = None, s
     else:
         F = (N//2) + 1
     PreFig()
-    fig = plt.figure(figsize = (F*6, F*6))
+    fig = plt.figure(figsize = (F*sub_fig_size, F*sub_fig_size))
     num = 1
     for i in range(N):
         ax = fig.add_subplot(F, F, num) 

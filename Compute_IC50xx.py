@@ -12,7 +12,7 @@ import pdb
 
            
 """Extract antibody efficacy against wild type: IC50xx data for each relevant antibody and sites"""
-Escape_data_site = pd.read_csv("Data/escape_data_site.csv")
+Escape_data_site = pd.read_csv("Data/escape_data_site.csv") # downloaded from https://github.com/jbloomlab/SARS2_RBD_Ab_escape_maps/blob/main/processed_data/escape_data_site.csv
 Class_Connect = pd.read_csv("Data/antibody_classes.csv")
 Escape_Fraction = pd.read_csv("Data/escape_fraction_per_site.csv")
 
