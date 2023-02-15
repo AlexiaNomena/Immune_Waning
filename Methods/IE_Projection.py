@@ -24,14 +24,14 @@ mut_sites_library = {"Wuhan-Hu-1":[],
                          "PMS20":[346, 417, 440, 445, 455, 475, 484, 501]}
 
 
-def fub_xy(variant_i, variant_j, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library):
-    sites_i = mut_sites_per_variant[variant_i]
-    sites_j = mut_sites_per_variant[variant_j]
+def fub_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library):
+    sites_1 = mut_sites_per_variant[variant_1]
+    sites_2 = mut_sites_per_variant[variant_2]
     
     escape_data = np.array(escape_per_sites["mean_escape_fraction_per_site"], dtype = float)
     all_bound = 1
-    for s in sites_j:
-        if s not in sites_i:
+    for s in sites_2:
+        if s not in sites_1:
             where_s = escape_per_sites["site"] == s
             where_ab = escape_per_sites["ab_class"] == ab
             if (len(where_s) != 0):
@@ -48,10 +48,14 @@ def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_v
         for i in range(len(variant_name)):
             for j in range(len(variant_name)):
                 if (i !=j) & (j>i):
-                    tot_fubxy = fub_xy(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant)
-                    if tot_fubxy != 0:
-                        FRxy_ab[i, j] = 100/((1/tot_fubxy) - 1)
-                    FRxy_ab[j, i] = FRxy_ab[i, j]
+                    tot_fub_xy = fub_xy(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant)
+                    if tot_fub_xy != 0:
+                        FRxy_ab[i, j] = 100/((1/tot_fub_xy) - 1)
+                    
+                    tot_fub_yx = fub_xy(variant_name[j], variant_name[i], escape_per_sites, ab, mut_sites_per_variant)
+                    if tot_fub_yx != 0:
+                        FRxy_ab[j, i] = 100/((1/tot_fub_yx) - 1)
+                    
         FRxy[ab] = FRxy_ab
     return FRxy
 
@@ -59,17 +63,22 @@ def Immunity_per_variant(t, PK_dframe, infection_data, variant_x, variant_y_list
     res = np.zeros((len(t), len(infection_data)))
     x = list(variant_name).index(variant_x)
     for l in range(len(infection_data)):
-        infected_l = infection_data[l]*variant_proportion[l]
+        # expected num of people infected with variant x at time l
+        infected_xl = infection_data[l]*variant_proportion[l, x]
         
         for j in range(len(variant_y_list)):
             y = list(variant_name).index(variant_y_list[j])
             for k in range(len(t)):
                 if l <= k:
                     antibody_level = PK_dframe.loc[k - l][1:]
-                    
                     IC50 = [Cross_react_dic[ab][x, y]*IC50xx[ab] for ab in Ab_classes]
                     Ab_Eff = efficacy_n_antibodies(antibody_level, IC50)
-                    res[k, l] += infected_l*Ab_Eff
+                    
+                    # expected num of people exposed to variant y at time k given that they were infected with variant x at time l
+                    infected_xl_exposed_yk = variant_proportion[k, y]*infected_xl
+                    
+                    res[k, l] += infected_xl_exposed_yk*Ab_Eff
+                    
     immunity_to_variant = np.sum(res, axis = 0)
     return immunity_to_variant 
 

@@ -62,10 +62,10 @@ def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 ,colormap = None, s
         cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
                        cbar = False, annot = True, fmt = ".2f", annot_kws = {"size":annotsize})
         num +=1
-        plt.title(dLabs[i], fontsize = 16)
+        plt.title("FR to Ab "+dLabs[i], fontsize = 16)
     
     #plt.subplots_adjust(top=0.965, bottom=0.095, left=0.080, right = 0.75, hspace=0.175, wspace=0.175)
-    plt.subplots_adjust(hspace=0.3, wspace=0.3)    
+    plt.subplots_adjust(hspace=0.4, wspace=0.4)    
     pdf = PdfPages(save_to + ".pdf")
     pdf.savefig(fig, bbox_inches = "tight")
     pdf.close()
