@@ -24,7 +24,7 @@ mut_sites_library = {"Wuhan-Hu-1":[],
                          "PMS20":[346, 417, 440, 445, 455, 475, 484, 501]}
 
 
-def fub_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library):
+def FUB(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library):
     sites_1 = mut_sites_per_variant[variant_1]
     sites_2 = mut_sites_per_variant[variant_2]
     
@@ -48,26 +48,26 @@ def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_v
         for i in range(len(variant_name)):
             for j in range(len(variant_name)):
                 if (i !=j) & (j>i):
-                    tot_fub_xy = fub_xy(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant)
+                    tot_fub_xy = FUB(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant)
                     if tot_fub_xy != 0:
                         FRxy_ab[i, j] = 100/((1/tot_fub_xy) - 1)
                     
-                    tot_fub_yx = fub_xy(variant_name[j], variant_name[i], escape_per_sites, ab, mut_sites_per_variant)
+                    tot_fub_yx = FUB(variant_name[j], variant_name[i], escape_per_sites, ab, mut_sites_per_variant)
                     if tot_fub_yx != 0:
                         FRxy_ab[j, i] = 100/((1/tot_fub_yx) - 1)
                     
         FRxy[ab] = FRxy_ab
     return FRxy
 
-def Immunity_per_variant(t, PK_dframe, infection_data, variant_x, variant_y_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
+def Immunity_per_variant(t, PK_dframe, infection_data, variant_1, variant_2_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
     res = np.zeros((len(t), len(infection_data)))
-    x = list(variant_name).index(variant_x)
+    x = list(variant_name).index(variant_1)
     for l in range(len(infection_data)):
         # expected num of people infected with variant x at time l
         infected_xl = infection_data[l]*variant_proportion[l, x]
         
-        for j in range(len(variant_y_list)):
-            y = list(variant_name).index(variant_y_list[j])
+        for j in range(len(variant_2_list)):
+            y = list(variant_name).index(variant_2_list[j])
             for k in range(len(t)):
                 if l <= k:
                     antibody_level = PK_dframe.loc[k - l][1:]
