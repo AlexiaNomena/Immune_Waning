@@ -71,20 +71,20 @@ def Immunity_one_neutralized_variant(t, PK_dframe, infection_data, neutralized_v
         
         for k in range(len(t)):
             if l <= k:
+                antibody_level = PK_dframe.loc[k - l][1:]
                 for j in range(len(variant_list)):
                     y = list(variant_name).index(variant_list[j])
-                    antibody_level = PK_dframe.loc[k - l][1:]
                     
                     IC50 = [Cross_react_dic[ab][x, y]*IC50xx[ab] for ab in Ab_classes]
                     Ab_Eff = efficacy_n_antibodies(antibody_level, IC50)
                     
                     # expected num of people exposed to variant y at time k given that they were infected with variant x at time l
-                    infected_xl_exposed_yk = variant_proportion[k, y]*infected_l
-                    IM_res[l, k] += infected_xl_exposed_yk*Ab_Eff
-                    Neut_res[l, k] += Ab_Eff
+                    infected_l_exposed_yk = variant_proportion[k, y]*infected_l
+                    IM_res[l, k] += infected_l_exposed_yk*Ab_Eff
+                    Neut_res[l, k] += variant_proportion[k, y]*Ab_Eff
                     
     immunity_to_variant = np.sum(IM_res, axis = 0)
-    Prob_Neut_variant  = np.sum(Neut_res, axis = 0) 
+    Prob_Neut_variant  = np.mean(Neut_res, axis = 0) 
     
     return immunity_to_variant, Prob_Neut_variant 
 
