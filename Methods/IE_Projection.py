@@ -59,29 +59,52 @@ def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_v
         FRxy[ab] = FRxy_ab
     return FRxy
 
-def Immunity_per_variant(t, PK_dframe, infection_data, variant_1, variant_2_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
-    res = np.zeros((len(t), len(infection_data)))
-    x = list(variant_name).index(variant_1)
+"""Expected Immunity Efficacy as a function of COVI19 variant proportions"""
+def Immunity_one_neutralized_variant(t, PK_dframe, infection_data, neutralized_variant, variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
+    IM_res = np.zeros((len(infection_data), len(t)))
+    Neut_res = np.zeros((len(infection_data), len(t)))
+    x = list(variant_name).index(neutralized_variant)
+    
     for l in range(len(infection_data)):
         # expected num of people infected with variant x at time l
-        infected_xl = infection_data[l]*variant_proportion[l, x]
+        infected_l = infection_data[l]
         
-        for j in range(len(variant_2_list)):
-            y = list(variant_name).index(variant_2_list[j])
-            for k in range(len(t)):
-                if l <= k:
+        for k in range(len(t)):
+            if l <= k:
+                for j in range(len(variant_list)):
+                    y = list(variant_name).index(variant_list[j])
                     antibody_level = PK_dframe.loc[k - l][1:]
+                    
                     IC50 = [Cross_react_dic[ab][x, y]*IC50xx[ab] for ab in Ab_classes]
                     Ab_Eff = efficacy_n_antibodies(antibody_level, IC50)
                     
                     # expected num of people exposed to variant y at time k given that they were infected with variant x at time l
-                    infected_xl_exposed_yk = variant_proportion[k, y]*infected_xl
+                    infected_xl_exposed_yk = variant_proportion[k, y]*infected_l
+                    IM_res[l, k] += infected_xl_exposed_yk*Ab_Eff
+                    Neut_res[l, k] += Ab_Eff
                     
-                    res[k, l] += infected_xl_exposed_yk*Ab_Eff
-                    
-    immunity_to_variant = np.sum(res, axis = 0)
-    return immunity_to_variant 
+    immunity_to_variant = np.sum(IM_res, axis = 0)
+    Prob_Neut_variant  = np.sum(Neut_res, axis = 0) 
+    
+    return immunity_to_variant, Prob_Neut_variant 
 
+""" Compute and plot several senarios """
+def Immunity_dynamics(t, PK_dframe, infection_data, neutralized_variant_list, variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
+    Expected_Immuned_list = []
+    Expected_Neut_list = []
+    for neutralized_variant in neutralized_variant_list:
+        immunity_to_variant, Prob_Neut_variant = Immunity_one_neutralized_variant(t, PK_dframe, infection_data, 
+                                neutralized_variant, variant_list, 
+                                variant_name, variant_proportion, 
+                                Ab_classes, IC50xx, Cross_react_dic)
+        
+        Expected_Immuned_list.append(immunity_to_variant)
+        Expected_Neut_list.append(Prob_Neut_variant)
+        
+    Expected_Immuned = np.sum(np.array(Expected_Immuned_list), axis = 0)
+    Prob_Neut = np.average(np.array(Expected_Neut_list), axis = 0)
+    return Expected_Immuned, Prob_Neut    
+   
 
 """ Projection of Infection probability as a funciton of COV19 Variant proportion """ 
 def Antibody_infos(t, antibody_data, VE_data):
