@@ -28,39 +28,56 @@ def FUB(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_
     sites_1 = set(mut_sites_per_variant[variant_1])
     sites_2 = set(mut_sites_per_variant[variant_2])
     
-    sites = sites_1.symmetric_difference(sites_2)
-    escape_data = np.array(escape_per_sites["mean_escape_fraction_per_site"], dtype = float)
-    
+    sites = list(sites_1.symmetric_difference(sites_2))
+    escape_data = escape_per_sites["mean_escape_fraction_per_site"].values
+    Missed = []
+    Greater_one = []
     all_bound = 1
     for s in sites:
-        where_s = escape_per_sites["site"] == s
-        where_ab = escape_per_sites["ab_class"] == ab
-        if (len(where_s) != 0):
-            all_bound *= (1 - escape_data[where_ab*where_s])
-        else: # if there is no data for some mutation sites
+        S = (escape_per_sites["site"].values).astype(str) == str(s)
+        AB = (escape_per_sites["ab_class"].values == ab)
+        where_s_ab = np.where(S & AB)[0]
+        try:
+            if len(where_s_ab != 0):
+                all_bound *= (1 - min(0.99, escape_data[where_s_ab]))
+                if escape_data[where_s_ab]>1:
+                    Greater_one.append("Escape fraction = %.2f at site %s and AB %s"%(escape_data[where_s_ab], s, ab))
+            else:
+                Missed.append("No Escape fraction: at site %s and AB %s"%(s, ab))
+            
+        except: # if there is no data for some mutation sites
             pdb.set_trace()
-    return 1 - all_bound # ab needs to bind just one of the sites
+    return 1 - all_bound, Missed, Greater_one # ab needs to bind just one of the sites
 
 def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library):
     FRxy = {}
+    Missed = []
+    Greater_one = []
     for ab in Ab_classes:
         FRxy_ab = np.ones((len(variant_name), len(variant_name)))
         for i in range(len(variant_name)):
             for j in range(len(variant_name)):
                 if (i !=j) & (j>i):
-                    tot_fub_xy = FUB(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant)
+                    tot_fub_xy, missed, gOne = FUB(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant)
                     if tot_fub_xy != 0:
-                        FRxy_ab[i, j] = 100/((1/tot_fub_xy) - 1)
+                        try:
+                            FRxy_ab[i, j] = 100*tot_fub_xy/(1 - tot_fub_xy) #100/((1/tot_fub_xy) - 1)
+                        except:
+                            pdb.set_trace()
                     
                     FRxy_ab[j, i] = FRxy_ab[i, j]
+                    Missed +=missed
+                    Greater_one +=gOne
                     """
                     tot_fub_yx = FUB(variant_name[j], variant_name[i], escape_per_sites, ab, mut_sites_per_variant)
                     if tot_fub_yx != 0:
                         FRxy_ab[j, i] = 100/((1/tot_fub_yx) - 1)
                     """
-                    
         FRxy[ab] = FRxy_ab
-    return FRxy
+    
+    Missed = np.unique(np.array(Missed))
+    Greater_one = np.unique(np.array(Greater_one))           
+    return FRxy, Missed, Greater_one
 
 """Expected Immunity Efficacy as a function of COVI19 variant proportions"""
 def Immunity_one_neutralized_variant(t, PK_dframe, infection_data, neutralized_variant, variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
