@@ -80,37 +80,36 @@ def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_v
     return FRxy, Missed, Greater_one
 
 """Expected Immunity Efficacy as a function of COVI19 variant proportions"""
-def Immunity_one_neutralized_variant(t, PK_dframe, infection_data, neutralized_variant, variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
+def Immunity_one_present_variant(t, PK_dframe, infection_data, present_variant, tested_variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
     IM_res = np.zeros((len(infection_data), len(t)))
-    x = list(variant_name).index(neutralized_variant)
+    x = list(variant_name).index(present_variant)
     
     for l in range(len(infection_data)):
         # expected num of people infected with variant x at time l
-        infected_l = infection_data[l]
+        infected_l = infection_data[l]*variant_proportion[l, x]
         
         for k in range(len(t)):
             if l <= k:
                 antibody_level = PK_dframe.loc[k - l][1:]
-                for j in range(len(variant_list)):
-                    y = list(variant_name).index(variant_list[j])
+                for j in range(len(tested_variant_list)):
+                    y = list(variant_name).index(tested_variant_list[j])
                     
                     IC50xy = [Cross_react_dic[ab][x, y]*IC50xx[ab] for ab in Ab_classes]
                     Ab_Eff = efficacy_n_antibodies(antibody_level, IC50xy)
                     
                     # expected num of people exposed to variant y at time k given that they were infected with variant x at time l
-                    infected_l_exposed_yk = variant_proportion[k, y]*infected_l
-                    IM_res[l, k] += infected_l_exposed_yk*Ab_Eff
+                    IM_res[l, k] += infected_l*Ab_Eff
                     
     immunity_to_variant = np.sum(IM_res, axis = 0)
     
     return immunity_to_variant
 
 """ Compute and plot several senarios """
-def Immunity_dynamics(t, PK_dframe, infection_data, neutralized_variant_list, variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
+def Immunity_dynamics(t, PK_dframe, infection_data, present_variant_list, tested_variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
     Expected_Immuned_list = []
-    for neutralized_variant in neutralized_variant_list:
-        immunity_to_variant = Immunity_one_neutralized_variant(t, PK_dframe, infection_data, 
-                                neutralized_variant, variant_list, 
+    for present_variant in present_variant_list:
+        immunity_to_variant = Immunity_one_present_variant(t, PK_dframe, infection_data, 
+                                present_variant, tested_variant_list, 
                                 variant_name, variant_proportion, 
                                 Ab_classes, IC50xx, Cross_react_dic)
         
