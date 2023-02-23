@@ -80,7 +80,8 @@ def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_v
     return FRxy, Missed, Greater_one
 
 """Expected Immunity Efficacy as a function of COVI19 variant proportions"""
-def Immunity_one_present_variant(t, PK_dframe, infection_data, present_variant, tested_variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
+def Immunity_one_present_variant(present_variant, t, PK_dframe, infection_data, tested_variant_list, 
+                                 variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
     IM_res = np.zeros((len(infection_data), len(t)))
     x = list(variant_name).index(present_variant)
     
@@ -105,16 +106,25 @@ def Immunity_one_present_variant(t, PK_dframe, infection_data, present_variant, 
     return immunity_to_variant
 
 """ Compute and plot several senarios """
-def Immunity_dynamics(t, PK_dframe, infection_data, present_variant_list, tested_variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic):
-    Expected_Immuned_list = []
-    for present_variant in present_variant_list:
-        immunity_to_variant = Immunity_one_present_variant(t, PK_dframe, infection_data, 
-                                present_variant, tested_variant_list, 
-                                variant_name, variant_proportion, 
-                                Ab_classes, IC50xx, Cross_react_dic)
+import joblib as jb
+from functools import partial
+def Immunity_dynamics(t, PK_dframe, infection_data, present_variant_list, tested_variant_list, variant_name, variant_proportion, Ab_classes, IC50xx, Cross_react_dic, parallel = False):
+    if not parallel:
+        Expected_Immuned_list = []
+        for present_variant in present_variant_list:
+            immunity_to_variant = Immunity_one_present_variant(present_variant, t, PK_dframe, infection_data, 
+                                                               tested_variant_list, variant_name, variant_proportion, 
+                                                               Ab_classes, IC50xx, Cross_react_dic)
+            
+            Expected_Immuned_list.append(immunity_to_variant)
+    else:
+        pfunc = partial(Immunity_one_present_variant, t=t, PK_dframe = PK_dframe, infection_data = infection_data, 
+                                                      tested_variant_list = tested_variant_list, variant_name = variant_name, 
+                                                      variant_proportion = variant_proportion, Ab_classes = Ab_classes, 
+                                                      IC50xx = IC50xx, Cross_react_dic = Cross_react_dic)
         
-        Expected_Immuned_list.append(immunity_to_variant)
-        
+        Expected_Immuned_list = list(jb.Parallel(n_jobs = -1, prefer = "threads")(jb.delayed(pfunc)(present_variant_list[r]) for r in range(len(present_variant_list))))
+    
     Expected_Immuned = np.sum(np.array(Expected_Immuned_list), axis = 0)
     return Expected_Immuned   
    
