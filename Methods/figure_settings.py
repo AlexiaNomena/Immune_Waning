@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib.backends.backend_pdf import PdfPages
 import pdb
+import seaborn as sns
 
 #### Visualisation ###  
 def PreFig(xsize = 12, ysize = 12):
@@ -19,12 +20,21 @@ def PreFig(xsize = 12, ysize = 12):
     matplotlib.rc('ytick', labelsize=ysize)
 
 
-def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 20, save_to = "test", xval = "x", yval = "f(x)", linewidth = 3):
+def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 20, save_to = "test", xval = "x", yval = "f(x)", linewidth = 3, palette = None, linestyle = None):
     PreFig(xsize = xysize[0], ysize = xysize[1])
     fig = plt.figure(figsize = figsize)
     ax = fig.add_subplot(1, 1, 1)
-    for i in range(Y.shape[0]):
-        plt.plot(t, Y[i, :], label = labels[i], linewidth = linewidth)
+    
+    if linestyle is None:
+        linestyle = ["-"]*Y.shape[0]
+    
+    if palette is None:
+        for i in range(Y.shape[0]):
+            plt.plot(t, Y[i, :], label = labels[i], linewidth = linewidth, linestyle = linestyle[i])
+    else:
+        col = sns.color_palette(palette, Y.shape[0])
+        for i in range(Y.shape[0]):
+            plt.plot(t, Y[i, :], label = labels[i], linewidth = linewidth, color = col[i], linestyle = linestyle[i])
         
     if is_log:
         plt.ylabel("$\ln$ %s"%yval, fontsize = labsize)
@@ -43,8 +53,6 @@ def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 
         plt.savefig(save_to)
     
     return fig, ax
-
-import seaborn as sns
 
 
 def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,colormap = None, save_to = "cross_reactivity", sub_fig_size = 6, num_row_col = None):
