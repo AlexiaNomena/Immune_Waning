@@ -47,7 +47,7 @@ def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 
 import seaborn as sns
 
 
-def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 ,colormap = None, save_to = "cross_reactivity", sub_fig_size = 6, num_row_col = None):
+def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,colormap = None, save_to = "cross_reactivity", sub_fig_size = 6, num_row_col = None):
     dLabs = list(data_dic.keys())
     N = len(dLabs)
     
@@ -68,11 +68,20 @@ def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 ,colormap = None, s
         else:
             ax = fig.add_subplot(num_row_col[0], num_row_col[1], num)
         
-        cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
+        if annotsize is not None:
+            cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
                        cbar = False, annot = True, fmt = ".2f", annot_kws = {"size":annotsize})
+        else:
+            cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
+                       cbar = True, annot = False)
+        
         num +=1
         plt.title("FR to AB "+dLabs[i], fontsize = 16)
-        plt.xticks(rotation = 90)
+        if ticksize is None:
+            plt.xticks(rotation = 90)
+        else:
+            plt.xticks(fontsize = ticksize[0], rotation = 90)
+            plt.yticks(fontsize = ticksize[1])
 
     #plt.subplots_adjust(top=0.965, bottom=0.095, left=0.080, right = 0.75, hspace=0.175, wspace=0.175)
     plt.subplots_adjust(hspace=0.4, wspace=0.4)    
