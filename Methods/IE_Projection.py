@@ -24,15 +24,16 @@ mut_sites_library = {"Wuhan-Hu-1":[],
                          "PMS20":[346, 417, 440, 445, 455, 475, 484, 501]}
 
 
-def FR_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library, EF_func = "MAX_MEAN", GM = False):
+def FR_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
     sites_1 = set(mut_sites_per_variant[variant_1])
     sites_2 = set(mut_sites_per_variant[variant_2])
     
     sites = list(sites_1.symmetric_difference(sites_2))
-    if EF_func[-4:] == "MEAN":
+    if EF_func[1] == "MEAN":
         escape_data = escape_per_sites["mean_escape_fraction_per_site"].values
-    elif EF_func[-3:] == "MAX":
+    elif EF_func[1] == "MAX":
         escape_data = escape_per_sites["max_escape_fraction_per_site"].values
+
     
     #### Bound Escape data####
     escape_data[escape_data >= 1.] = 0.99
@@ -47,10 +48,10 @@ def FR_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mu
         where_s_ab = np.where(S & AB)[0]
         
         if len(where_s_ab != 0):
-            if EF_func == "MAX_MEAN":
+            if EF_func[0] == "MAX":
                 EF = np.max(escape_data[where_s_ab].copy())
                 
-            elif EF_func == "MEAN_MAX":
+            elif EF_func[0] == "MEAN":
                 EF = np.mean(escape_data[where_s_ab].copy())
             
             prod_FR *= 100*EF/(1.- EF)
@@ -71,7 +72,7 @@ def FR_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mu
     return prod_FR, Missed, Greater_one # ab needs to bind just one of the sites
 
 
-def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library, EF_func = "MAX_MEAN", GM = False):
+def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
     FRxy = {}
     Missed = []
     Greater_one = []
@@ -181,7 +182,7 @@ def IE_Per_Variant(t, infected, total_population, antibody_data, VE_data_wild, v
         
     return res_dic
 """ First version of cross_reactivity map"""
-def cross_reactivity_ver1(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library):
+def cross_reactivity_ver1(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
     FRxy = {}
     Missed = []
     Greater_one = []
@@ -211,24 +212,41 @@ def cross_reactivity_ver1(variant_name, escape_per_sites, Ab_classes, mut_sites_
     Greater_one = np.unique(np.array(Greater_one))           
     return FRxy, Missed, Greater_one
 
-def FUB(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library):
+def FUB(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
     sites_1 = set(mut_sites_per_variant[variant_1])
     sites_2 = set(mut_sites_per_variant[variant_2])
     
     sites = list(sites_1.symmetric_difference(sites_2))
-    escape_data = escape_per_sites["mean_escape_fraction_per_site"].values
+    if EF_func[1] == "MEAN":
+        escape_data = escape_per_sites["mean_escape_fraction_per_site"].values
+    elif EF_func[1] == "MAX":
+        escape_data = escape_per_sites["max_escape_fraction_per_site"].values
+    
+    #### Bound Escape data####
+    escape_data[escape_data >= 1.] = 0.99
+    escape_data[escape_data <= 1./101] = 1./101
+    
     Missed = []
     Greater_one = []
     all_bound = 1
     for s in sites:
         S = (escape_per_sites["site"].values).astype(str) == str(s)
-        AB = (escape_per_sites["ab_class"].values == ab)
+        AB = (escape_per_sites["group"].values == ab)
         where_s_ab = np.where(S & AB)[0]
         try:
             if len(where_s_ab != 0):
-                all_bound *= (1 - min(0.99, escape_data[where_s_ab]))
-                if escape_data[where_s_ab]>1:
-                    Greater_one.append("Escape fraction = %.2f at site %s and AB %s"%(escape_data[where_s_ab], s, ab))
+                if EF_func[0] == "MAX":
+                    EF = np.max(escape_data[where_s_ab].copy())
+     
+                elif EF_func[0] == "MEAN":
+                    EF = np.mean(escape_data[where_s_ab].copy())
+ 
+                all_bound *= (1 - min(0.99, EF))
+                
+                if np.any(escape_data[where_s_ab]>1):
+                    cond_list = (escape_per_sites["condition"].values)[(where_s_ab) & (escape_data > 1)]
+                    for cond in cond_list:
+                        Greater_one.append("Escape fraction = %.2f at site %s for AB %s and condition %s "%(escape_data[where_s_ab], s, ab, cond))
             else:
                 Missed.append("No Escape fraction: at site %s and AB %s"%(s, ab))
             
