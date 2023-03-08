@@ -61,14 +61,14 @@ def FR_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mu
             if np.any(escape_data[where_s_ab]>1):
                 cond_list = (escape_per_sites["condition"].values)[(where_s_ab) & (escape_data > 1)]
                 for cond in cond_list:
-                    Greater_one.append("Escape fraction = %.2f at site %s for AB %s and condition %s "%(escape_data[where_s_ab], s, ab, cond))
+                    Greater_one.append("Escape fraction = %.2f at site %s for AB %s and condition %s‚"%(escape_data[where_s_ab], s, ab, cond))
         else:
             Missed.append("No Escape fraction: at site %s and AB %s"%(s, ab))
-    
     if GM:
         if len(sites) != 0:
             prod_FR = prod_FR**(1/len(sites))
-        
+    
+    Greater_one.append("\nNum of EF > 1 = %d out of %d, Num of EF<1/101= %d out of %d"%(np.sum(escape_data > 1.), len(escape_data), np.sum(escape_data<=1./101), len(escape_data)))
     return prod_FR, Missed, Greater_one # ab needs to bind just one of the sites
 
 
@@ -90,6 +90,7 @@ def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_v
                     
                     FRxy_ab[j, i] = FRxy_ab[i, j]
                     Missed +=missed
+                    Greater_one += gOne
  
         FRxy[ab] = FRxy_ab
     
@@ -191,7 +192,7 @@ def cross_reactivity_ver1(variant_name, escape_per_sites, Ab_classes, mut_sites_
         for i in range(len(variant_name)):
             for j in range(len(variant_name)):
                 if (i !=j) & (j>i):
-                    tot_fub_xy, missed, gOne = FUB(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant)
+                    tot_fub_xy, missed, gOne = FUB(variant_name[i], variant_name[j], escape_per_sites, ab, mut_sites_per_variant, EF_func, GM)
                     if tot_fub_xy != 0:
                         try:
                             FRxy_ab[i, j] = 100*tot_fub_xy/(1 - tot_fub_xy) #100/((1/tot_fub_xy) - 1)
