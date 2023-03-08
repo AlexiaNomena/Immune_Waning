@@ -44,7 +44,7 @@ def FR_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mu
     prod_FR = 1
     for s in sites:
         S = (escape_per_sites["site"].values).astype(str) == str(s)
-        AB = (escape_per_sites["group"].values == ab)
+        AB = (escape_per_sites["group"].values).astype(str) == str(ab)
         where_s_ab = np.where(S & AB)[0]
         
         if len(where_s_ab != 0):
@@ -232,7 +232,7 @@ def FUB(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_
     all_bound = 1
     for s in sites:
         S = (escape_per_sites["site"].values).astype(str) == str(s)
-        AB = (escape_per_sites["group"].values == ab)
+        AB = (escape_per_sites["group"].values).astype(str) == str(ab)
         where_s_ab = np.where(S & AB)[0]
         try:
             if len(where_s_ab != 0):
