@@ -55,7 +55,9 @@ def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 
     return fig, ax
 
 
-def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,colormap = None, save_to = "cross_reactivity", sub_fig_size = 6, num_row_col = None):
+def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,colormap = None, save_to = "cross_reactivity", 
+            sub_fig_size = 6, num_row_col = None, cbar_kws = None, cbar_labsize = 12):
+    
     dLabs = list(data_dic.keys())
     N = len(dLabs)
     
@@ -81,8 +83,10 @@ def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,
                        cbar = False, annot = True, fmt = ".2f", annot_kws = {"size":annotsize})
         else:
             cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
-                       cbar = True, annot = False)
-        
+                       cbar = True, annot = False, cbar_kws = cbar_kws)
+            
+            cMap.figure.axes[-1].yaxis.label.set_size(cbar_labsize)
+            
         num +=1
         plt.title("FR to AB "+dLabs[i], fontsize = 16)
         if ticksize is None:
