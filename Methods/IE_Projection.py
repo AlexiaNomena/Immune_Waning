@@ -24,21 +24,17 @@ mut_sites_library = {"Wuhan-Hu-1":[],
                          "PMS20":[346, 417, 440, 445, 455, 475, 484, 501]}
 
 
+
 def FR_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
     sites_1 = set(mut_sites_per_variant[variant_1])
     sites_2 = set(mut_sites_per_variant[variant_2])
     
     sites = list(sites_1.symmetric_difference(sites_2))
-    if EF_func[1] == "MEAN":
+    if EF_func == "MEAN":
         escape_data = escape_per_sites["mean_escape_fraction_per_site"].values
-    elif EF_func[1] == "MAX":
+    elif EF_func == "MAX":
         escape_data = escape_per_sites["max_escape_fraction_per_site"].values
 
-    
-    #### Bound Escape data####
-    escape_data[escape_data >= 1.] = 0.99
-    escape_data[escape_data <= 1./101] = 1./101
-    
     Missed = []
     Greater_one = []
     prod_FR = 1
@@ -48,29 +44,21 @@ def FR_xy(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mu
         where_s_ab = np.where(S & AB)[0]
         
         if len(where_s_ab != 0):
-            if EF_func[0] == "MAX":
-                EF = np.max(escape_data[where_s_ab].copy())
-                
-            elif EF_func[0] == "MEAN":
-                EF = np.mean(escape_data[where_s_ab].copy())
+            EF = escape_data[where_s_ab]
             
             prod_FR *= 100*EF/(1.- EF)
             if EF/(1.- EF)<0:
                 pdb.set_trace()
-                
-            if np.any(escape_data[where_s_ab]>1):
-                cond_list = (escape_per_sites["condition"].values)[(where_s_ab) & (escape_data > 1)]
-                for cond in cond_list:
-                    Greater_one.append("Escape fraction = %.2f at site %s for AB %s and condition %s‚"%(escape_data[where_s_ab], s, ab, cond))
+            
+            if escape_data[where_s_ab]>1:
+                Greater_one.append("Escape fraction = %.2f at site %s for AB %s‚"%(escape_data[where_s_ab], s, ab))
         else:
             Missed.append("No Escape fraction: at site %s and AB %s"%(s, ab))
     if GM:
         if len(sites) != 0:
             prod_FR = prod_FR**(1/len(sites))
     
-    Greater_one.append("\nNum of EF > 1 = %d out of %d, Num of EF<1/101= %d out of %d"%(np.sum(escape_data > 1.), len(escape_data), np.sum(escape_data<=1./101), len(escape_data)))
-    return prod_FR, Missed, Greater_one # ab needs to bind just one of the sites
-
+    return prod_FR, Missed, Greater_one 
 
 def cross_reactivity(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
     FRxy = {}
@@ -254,3 +242,50 @@ def FUB(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_
         except: # if there is no data for some mutation sites
             pdb.set_trace()
     return 1 - all_bound, Missed, Greater_one # ab needs to bind just one of the sites
+
+def FR_xy_ver1(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
+    sites_1 = set(mut_sites_per_variant[variant_1])
+    sites_2 = set(mut_sites_per_variant[variant_2])
+    
+    sites = list(sites_1.symmetric_difference(sites_2))
+    if EF_func[1] == "MEAN":
+        escape_data = escape_per_sites["mean_escape_fraction_per_site"].values
+    elif EF_func[1] == "MAX":
+        escape_data = escape_per_sites["max_escape_fraction_per_site"].values
+
+    
+    #### Bound Escape data####
+    escape_data[escape_data >= 1.] = 0.99
+    escape_data[escape_data <= 1./101] = 1./101
+    
+    Missed = []
+    Greater_one = []
+    prod_FR = 1
+    for s in sites:
+        S = (escape_per_sites["site"].values).astype(str) == str(s)
+        AB = (escape_per_sites["group"].values).astype(str) == str(ab)
+        where_s_ab = np.where(S & AB)[0]
+        
+        if len(where_s_ab != 0):
+            if EF_func[0] == "MAX":
+                EF = np.max(escape_data[where_s_ab].copy())
+                
+            elif EF_func[0] == "MEAN":
+                EF = np.mean(escape_data[where_s_ab].copy())
+            
+            prod_FR *= 100*EF/(1.- EF)
+            if EF/(1.- EF)<0:
+                pdb.set_trace()
+                
+            if np.any(escape_data[where_s_ab]>1):
+                cond_list = (escape_per_sites["condition"].values)[(where_s_ab) & (escape_data > 1)]
+                for cond in cond_list:
+                    Greater_one.append("Escape fraction = %.2f at site %s for AB %s and condition %s‚"%(escape_data[where_s_ab], s, ab, cond))
+        else:
+            Missed.append("No Escape fraction: at site %s and AB %s"%(s, ab))
+    if GM:
+        if len(sites) != 0:
+            prod_FR = prod_FR**(1/len(sites))
+    
+    Greater_one.append("\nNum of EF > 1 = %d out of %d, Num of EF<1/101= %d out of %d"%(np.sum(escape_data > 1.), len(escape_data), np.sum(escape_data<=1./101), len(escape_data)))
+    return prod_FR, Missed, Greater_one 
