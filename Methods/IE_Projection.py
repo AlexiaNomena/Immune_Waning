@@ -171,7 +171,7 @@ def IE_Per_Variant(t, infected, total_population, antibody_data, VE_data_wild, v
         
     return res_dic
 """ First version of cross_reactivity map"""
-def cross_reactivity_ver1(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
+def cross_reactivity_ver1(variant_name, escape_per_sites, Ab_classes, mut_sites_per_variant = mut_sites_library, EF_func = "MEAN", GM = False):
     FRxy = {}
     Missed = []
     Greater_one = []
@@ -201,7 +201,46 @@ def cross_reactivity_ver1(variant_name, escape_per_sites, Ab_classes, mut_sites_
     Greater_one = np.unique(np.array(Greater_one))           
     return FRxy, Missed, Greater_one
 
-def FUB(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
+
+def FUB(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library, EF_func = "MEAN", GM = False):
+    sites_1 = set(mut_sites_per_variant[variant_1])
+    sites_2 = set(mut_sites_per_variant[variant_2])
+    
+    sites = list(sites_1.symmetric_difference(sites_2))
+    if EF_func == "MEAN":
+        escape_data = escape_per_sites["mean_escape_fraction_per_site"].values
+    elif EF_func == "MAX":
+        escape_data = escape_per_sites["max_escape_fraction_per_site"].values
+    
+    #### Bound Escape data####
+    escape_data[escape_data >= 1.] = 0.99
+    escape_data[escape_data <= 1./101] = 1./101
+    
+    Missed = []
+    Greater_one = []
+    all_bound = 1
+    for s in sites:
+        S = (escape_per_sites["site"].values).astype(str) == str(s)
+        AB = (escape_per_sites["ab_class"].values).astype(str) == str(ab)
+        where_s_ab = np.where(S & AB)[0]
+        try:
+            if len(where_s_ab != 0):
+                EF = escape_data[where_s_ab]
+ 
+                all_bound *= (1 - min(0.99, EF))
+                
+                if escape_data[where_s_ab]>1:
+                    Greater_one.append("Escape fraction = %.2f at site %s for AB %s‚"%(escape_data[where_s_ab], s, ab))
+                    
+            else:
+                Missed.append("No Escape fraction: at site %s and AB %s"%(s, ab))
+            
+        except: # if there is no data for some mutation sites
+            pdb.set_trace()
+    return 1 - all_bound, Missed, Greater_one # ab needs to bind just one of the sites
+
+
+def FUB_ver2(variant_1, variant_2, escape_per_sites, ab, mut_sites_per_variant = mut_sites_library, EF_func = ("MAX","MEAN"), GM = False):
     sites_1 = set(mut_sites_per_variant[variant_1])
     sites_2 = set(mut_sites_per_variant[variant_2])
     

@@ -61,7 +61,37 @@ def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,
     dLabs = list(data_dic.keys())
     N = len(dLabs)
     
+    pdf = PdfPages(save_to + ".pdf")    
+    
     PreFig()
+    
+
+    for i in range(N):
+        fig_sub = plt.figure(figsize = (sub_fig_size, sub_fig_size))
+        
+        if annotsize is not None:
+            cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
+                       cbar = False, annot = True, fmt = ".2f", annot_kws = {"size":annotsize})
+        else:
+            cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
+                       cbar = True, annot = False, cbar_kws = cbar_kws)
+            
+            cMap.figure.axes[-1].yaxis.label.set_size(cbar_labsize)
+            
+        
+        plt.title(dLabs[i], fontsize = cbar_labsize)
+        if ticksize is None:
+            plt.xticks(rotation = 90)
+            plt.yticks(rotation = 0)
+        else:
+            plt.xticks(fontsize = ticksize[0], rotation = 90)
+            plt.yticks(fontsize = ticksize[1], rotation = 0)
+        
+        try:
+            pdf.savefig(cMap.figure, bbox_inches = "tight", dpi = 1200) 
+        except:
+            pdf.savefig(cMap.figure, bbox_inches = "tight") 
+    
     if num_row_col is None:
         if N%2 == 0:
             F = int(N/2) 
@@ -88,17 +118,20 @@ def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,
             cMap.figure.axes[-1].yaxis.label.set_size(cbar_labsize)
             
         num +=1
-        plt.title("FR to AB "+dLabs[i], fontsize = 16)
+        
+        plt.title(dLabs[i], fontsize = cbar_labsize)
         if ticksize is None:
             plt.xticks(rotation = 90)
+            plt.yticks(rotation = 0)
         else:
             plt.xticks(fontsize = ticksize[0], rotation = 90)
-            plt.yticks(fontsize = ticksize[1])
-
+            plt.yticks(fontsize = ticksize[1], rotation = 0)
     #plt.subplots_adjust(top=0.965, bottom=0.095, left=0.080, right = 0.75, hspace=0.175, wspace=0.175)
-    plt.subplots_adjust(hspace=0.4, wspace=0.4)    
-    pdf = PdfPages(save_to + ".pdf")
-    pdf.savefig(fig, bbox_inches = "tight")
+    plt.subplots_adjust(hspace=0.4, wspace=0.4)
+    try:
+        pdf.savefig(fig, bbox_inches = "tight", dpi = 1200)
+    except:
+        pdf.savefig(fig, bbox_inches = "tight")
     pdf.close()
     return fig
     
