@@ -56,7 +56,7 @@ def Display(t, Y, is_log, labels, figsize = (7, 7), xysize = (15,15), labsize = 
 
 
 def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,colormap = None, save_to = "cross_reactivity", 
-            sub_fig_size = 6, num_row_col = None, cbar_kws = None, cbar_labsize = 12):
+            sub_fig_size = 6, num_row_col = None, cbar_kws = None, cbar_labsize = 12, save_separated = True):
     
     dLabs = list(data_dic.keys())
     N = len(dLabs)
@@ -65,32 +65,32 @@ def Heatmap(data_dic, row_labels, col_labels, annotsize = 12 , ticksize = None ,
     
     PreFig()
     
-
-    for i in range(N):
-        fig_sub = plt.figure(figsize = (sub_fig_size, sub_fig_size))
-        
-        if annotsize is not None:
-            cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
-                       cbar = False, annot = True, fmt = ".2f", annot_kws = {"size":annotsize})
-        else:
-            cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
-                       cbar = True, annot = False, cbar_kws = cbar_kws)
+    if save_separated:
+        for i in range(N):
+            if annotsize is not None:
+                fig_sub = plt.figure(figsize = (sub_fig_size, sub_fig_size))
+                cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
+                           cbar = False, annot = True, fmt = ".2f", annot_kws = {"size":annotsize})
+            else:
+                fig_sub = plt.figure(figsize = (sub_fig_size, 1.1*sub_fig_size))
+                cMap = sns.heatmap(data = data_dic[dLabs[i]], cmap = colormap, xticklabels = row_labels, yticklabels = col_labels, 
+                           cbar = True, annot = False, cbar_kws = cbar_kws)
+                
+                cMap.figure.axes[-1].yaxis.label.set_size(cbar_labsize)
+                
             
-            cMap.figure.axes[-1].yaxis.label.set_size(cbar_labsize)
+            plt.title(dLabs[i], fontsize = cbar_labsize)
+            if ticksize is None:
+                plt.xticks(rotation = 90)
+                plt.yticks(rotation = 0)
+            else:
+                plt.xticks(fontsize = ticksize[0], rotation = 90)
+                plt.yticks(fontsize = ticksize[1], rotation = 0)
             
-        
-        plt.title(dLabs[i], fontsize = cbar_labsize)
-        if ticksize is None:
-            plt.xticks(rotation = 90)
-            plt.yticks(rotation = 0)
-        else:
-            plt.xticks(fontsize = ticksize[0], rotation = 90)
-            plt.yticks(fontsize = ticksize[1], rotation = 0)
-        
-        try:
-            pdf.savefig(cMap.figure, bbox_inches = "tight", dpi = 1200) 
-        except:
-            pdf.savefig(cMap.figure, bbox_inches = "tight") 
+            try:
+                pdf.savefig(cMap.figure, bbox_inches = "tight", dpi = 1200) 
+            except:
+                pdf.savefig(cMap.figure, bbox_inches = "tight") 
     
     if num_row_col is None:
         if N%2 == 0:
